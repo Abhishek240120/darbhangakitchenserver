@@ -1,13 +1,41 @@
 const express=require('express');
 const app=express();
+var bodyParser = require('body-parser')
+
+
+let cors = require("cors");
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }))
+
+app.use(bodyParser.json())
 
 const utils=require('./utils.js');
 var nodemailer = require('nodemailer');
 
-app.get('/enterUser',(req,res)=>{
+var otp=Math.floor(1000 + Math.random() * 9000);
+
+app.post('/enterUser',(req,res)=>{
 	console.log(req.body);
-	sendOtp();
-	res.send("Hello world");
+	let reciever_mail=req.body.mail;
+	otp=Math.floor(1000 + Math.random() * 9000);
+	sendOtp(reciever_mail,otp);
+	res.send("otp sent successfully");
+})
+
+app.post('/verifyUser',(req,res)=>{
+	console.log(req.body);
+	reciever_otp=req.body.otp;
+	if(otp==reciever_otp){
+		let reciever_response={
+			"verified":"true"
+		};
+		res.json(reciever_response);
+	}else{
+		let reciever_response={
+			"verified":"false"
+		};
+		res.json(reciever_response);
+	}
 })
 
 
@@ -16,7 +44,7 @@ app.listen(utils.PORT_NO,()=>{
 })
 
 
-function sendOtp(){
+function sendOtp(reciever_mail,otp){
 
 	console.log("otp starting ");
 	var transporter = nodemailer.createTransport({
@@ -29,9 +57,9 @@ function sendOtp(){
 
 	var mailOptions = {
 	  from:utils.SENDER_MAIL,
-	  to:utils.RECIEVER_MAIL,
-	  subject: 'Sending Email using Node.js for testing',
-	  text: 'That was easy and smooth!'
+	  to:reciever_mail,
+	  text: 'Otp for subscribing to the newsletter is : '+otp,
+	  subject: 'Darbhanga Kitchen'
 	};
 
 	transporter.sendMail(mailOptions, function(error, info){
